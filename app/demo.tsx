@@ -1,5 +1,6 @@
 import { TimelineChart } from '@/components/TimelineChart';
-import { generateDummyChartData } from '@/data/dummyData';
+// import { generateDummyChartData } from '@/data/dummyData';
+import { generateDummyChartData } from '@/data/dummyDataRealistic';
 
 export default function DemoPage() {
   const chartData = generateDummyChartData();
