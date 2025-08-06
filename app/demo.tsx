@@ -6,7 +6,7 @@ export default function DemoPage() {
   const chartData = generateDummyChartData();
 
   return (
-    <div className="container mx-auto p-8">
+    <body className="container mx-auto p-8">
       <h1 className="mb-2 text-3xl font-bold">Financial Timeline Demo</h1>
       <p className="mb-8 text-muted-foreground">
         Interactive visualization of your financial components over time. Click the legend items to
@@ -107,6 +107,6 @@ export default function DemoPage() {
           </div>
         </div>
       </div>
-    </div>
+    </body>
   );
 }
