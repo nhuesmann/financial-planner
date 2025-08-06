@@ -2,9 +2,9 @@ import {
   Component,
   ComponentEdit,
   ComponentType,
-  ExpenseFrequency,
   InvestmentAccountType,
   MortgageTerm,
+  TransactionFrequency,
 } from '@/types/components';
 import { ChartData } from '@/types/timeline/chart';
 import { createChartData } from '@/utils/calculations/chartTransformers';
@@ -37,7 +37,7 @@ export function generateDummyComponents(): Component[] {
       type: ComponentType.EXPENSE,
       startDate: oneYearAgo,
       amount: 2500,
-      frequency: ExpenseFrequency.MONTHLY,
+      frequency: TransactionFrequency.MONTHLY,
       isRecurring: true,
       color: '#ef4444',
     },
@@ -49,7 +49,7 @@ export function generateDummyComponents(): Component[] {
       type: ComponentType.EXPENSE,
       startDate: oneYearAgo,
       amount: 200,
-      frequency: ExpenseFrequency.MONTHLY,
+      frequency: TransactionFrequency.MONTHLY,
       isRecurring: true,
       color: '#f97316',
     },
@@ -61,7 +61,7 @@ export function generateDummyComponents(): Component[] {
       type: ComponentType.EXPENSE,
       startDate: oneYearAgo,
       amount: 150,
-      frequency: ExpenseFrequency.WEEKLY,
+      frequency: TransactionFrequency.WEEKLY,
       isRecurring: true,
       color: '#fb923c',
     },
@@ -84,11 +84,12 @@ export function generateDummyComponents(): Component[] {
       startDate: oneYearAgo,
       balance: 25000,
       interestRate: 4.5,
-      monthlyContribution: 300, // $300/month automatic transfer
+      contributionAmount: 300,
+      contributionFrequency: TransactionFrequency.MONTHLY,
       color: '#10b981',
     },
 
-    // 401k Investment Account with employer match
+    // 401k Investment Account with employer match (biweekly payroll)
     {
       id: 'investment-1',
       name: '401(k)',
@@ -97,7 +98,8 @@ export function generateDummyComponents(): Component[] {
       balance: 50000,
       projectedAnnualReturn: 8,
       accountType: InvestmentAccountType.FOUR_ZERO_ONE_K,
-      monthlyContribution: 500, // $500/month employee contribution
+      contributionAmount: 250, // $250 per paycheck (biweekly)
+      contributionFrequency: TransactionFrequency.BIWEEKLY,
       employerMatchPercent: 4, // 4% match
       employerMatchLimit: 6000, // $6k annual match limit
       color: '#8b5cf6',
@@ -269,7 +271,7 @@ export function getSampleChartData(): ChartData {
       type: ComponentType.EXPENSE,
       startDate: twoYearsAgo,
       amount: 4000,
-      frequency: ExpenseFrequency.MONTHLY,
+      frequency: TransactionFrequency.MONTHLY,
       isRecurring: true,
       color: '#ef4444',
     },

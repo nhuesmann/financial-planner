@@ -6,11 +6,11 @@ import {
   CurrentHome,
   Debt,
   Expense,
-  ExpenseFrequency,
   FutureHomePurchase,
   Income,
   InvestmentAccount,
   SavingsAccount,
+  TransactionFrequency,
 } from '@/types/components';
 import { TimelineDataPoint } from '@/types/timeline/chart';
 
@@ -198,13 +198,13 @@ export function calculateExpense(component: Expense, dateRange: Date[]): Timelin
     let monthlyAmount = 0;
 
     switch (component.frequency) {
-      case ExpenseFrequency.MONTHLY:
+      case TransactionFrequency.MONTHLY:
         monthlyAmount = component.amount;
         break;
-      case ExpenseFrequency.WEEKLY:
+      case TransactionFrequency.WEEKLY:
         monthlyAmount = (component.amount * 52) / 12;
         break;
-      case ExpenseFrequency.YEARLY:
+      case TransactionFrequency.YEARLY:
         // Only show expense in the month it occurs
         if (date.getMonth() === component.startDate.getMonth()) {
           monthlyAmount = component.amount / 12;

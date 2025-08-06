@@ -19,8 +19,9 @@ export enum InvestmentAccountType {
   HSA = 'HSA',
 }
 
-export enum ExpenseFrequency {
+export enum TransactionFrequency {
   WEEKLY = 'WEEKLY',
+  BIWEEKLY = 'BIWEEKLY',
   MONTHLY = 'MONTHLY',
   YEARLY = 'YEARLY',
 }
@@ -49,7 +50,8 @@ export interface SavingsAccount extends BaseComponent {
   type: ComponentType.SAVINGS_ACCOUNT;
   balance: number;
   interestRate: number;
-  monthlyContribution?: number; // Optional automatic transfer from checking
+  contributionAmount?: number; // Optional automatic transfer amount
+  contributionFrequency?: TransactionFrequency; // How often to contribute
 }
 
 export interface InvestmentAccount extends BaseComponent {
@@ -57,7 +59,8 @@ export interface InvestmentAccount extends BaseComponent {
   balance: number;
   projectedAnnualReturn: number;
   accountType: InvestmentAccountType;
-  monthlyContribution?: number; // Employee contribution from checking
+  contributionAmount?: number; // Employee contribution amount
+  contributionFrequency?: TransactionFrequency; // How often to contribute
   employerMatchPercent?: number; // Employer match percentage (e.g., 4 for 4%)
   employerMatchLimit?: number; // Optional annual match limit in dollars
 }
@@ -78,7 +81,7 @@ export interface Income extends BaseComponent {
 export interface Expense extends BaseComponent {
   type: ComponentType.EXPENSE;
   amount: number;
-  frequency: ExpenseFrequency;
+  frequency: TransactionFrequency;
   isRecurring: boolean;
 }
 

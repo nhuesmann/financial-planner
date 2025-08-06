@@ -8,6 +8,7 @@ import {
   InvestmentAccount,
   InvestmentAccountType,
   SavingsAccount,
+  TransactionFrequency,
 } from '@/types/components';
 import { TimelineDataPoint } from '@/types/timeline/chart';
 
@@ -39,6 +40,24 @@ export class AccountFlowCalculator {
   private edits: Map<string, ComponentEdit[]>;
   private monthlyFlows: MonthlyFlow[] = [];
   private accountBalances: AccountBalances[] = [];
+
+  /**
+   * Convert any frequency amount to monthly equivalent
+   */
+  private convertToMonthly(amount: number, frequency: TransactionFrequency): number {
+    switch (frequency) {
+      case TransactionFrequency.WEEKLY:
+        return (amount * 52) / 12; // 52 weeks per year / 12 months
+      case TransactionFrequency.BIWEEKLY:
+        return (amount * 26) / 12; // 26 bi-weekly periods per year / 12 months
+      case TransactionFrequency.MONTHLY:
+        return amount;
+      case TransactionFrequency.YEARLY:
+        return amount / 12;
+      default:
+        return 0;
+    }
+  }
 
   constructor(components: Component[], edits: Map<string, ComponentEdit[]> = new Map()) {
     this.components = components;
@@ -327,7 +346,12 @@ export class AccountFlowCalculator {
       .reduce((total, component) => {
         const savings = component as SavingsAccount;
         if (date >= component.startDate && (!component.endDate || date <= component.endDate)) {
-          return total + (savings.monthlyContribution || 0);
+          if (savings.contributionAmount && savings.contributionFrequency) {
+            return (
+              total +
+              this.convertToMonthly(savings.contributionAmount, savings.contributionFrequency)
+            );
+          }
         }
         return total;
       }, 0);
@@ -339,7 +363,12 @@ export class AccountFlowCalculator {
       .reduce((total, component) => {
         const investment = component as InvestmentAccount;
         if (date >= component.startDate && (!component.endDate || date <= component.endDate)) {
-          return total + (investment.monthlyContribution || 0);
+          if (investment.contributionAmount && investment.contributionFrequency) {
+            return (
+              total +
+              this.convertToMonthly(investment.contributionAmount, investment.contributionFrequency)
+            );
+          }
         }
         return total;
       }, 0);
@@ -350,7 +379,9 @@ export class AccountFlowCalculator {
     if (component?.type === ComponentType.SAVINGS_ACCOUNT) {
       const savings = component as SavingsAccount;
       if (date >= component.startDate && (!component.endDate || date <= component.endDate)) {
-        return savings.monthlyContribution || 0;
+        if (savings.contributionAmount && savings.contributionFrequency) {
+          return this.convertToMonthly(savings.contributionAmount, savings.contributionFrequency);
+        }
       }
     }
     return 0;
@@ -361,7 +392,12 @@ export class AccountFlowCalculator {
     if (component?.type === ComponentType.INVESTMENT_ACCOUNT) {
       const investment = component as InvestmentAccount;
       if (date >= component.startDate && (!component.endDate || date <= component.endDate)) {
-        return investment.monthlyContribution || 0;
+        if (investment.contributionAmount && investment.contributionFrequency) {
+          return this.convertToMonthly(
+            investment.contributionAmount,
+            investment.contributionFrequency
+          );
+        }
       }
     }
     return 0;
