@@ -1,65 +1,77 @@
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+
 import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 
 const data = [
   {
-    name: 'Page A',
-    uv: 4000,
-    pv: 2400,
-    amt: 2400,
+    month: 'Jan',
+    netWorth: 4000,
+    assets: 6400,
+    liabilities: 2400,
   },
   {
-    name: 'Page B',
-    uv: 3000,
-    pv: 1398,
-    amt: 2210,
+    month: 'Feb',
+    netWorth: 3000,
+    assets: 5398,
+    liabilities: 2398,
   },
   {
-    name: 'Page C',
-    uv: 2000,
-    pv: 9800,
-    amt: 2290,
+    month: 'Mar',
+    netWorth: 2000,
+    assets: 11800,
+    liabilities: 9800,
   },
   {
-    name: 'Page D',
-    uv: 2780,
-    pv: 3908,
-    amt: 2000,
+    month: 'Apr',
+    netWorth: 2780,
+    assets: 6688,
+    liabilities: 3908,
   },
   {
-    name: 'Page E',
-    uv: 1890,
-    pv: 4800,
-    amt: 2181,
+    month: 'May',
+    netWorth: 1890,
+    assets: 6680,
+    liabilities: 4790,
   },
   {
-    name: 'Page F',
-    uv: 2390,
-    pv: 3800,
-    amt: 2500,
+    month: 'Jun',
+    netWorth: 2390,
+    assets: 6190,
+    liabilities: 3800,
   },
   {
-    name: 'Page G',
-    uv: 3490,
-    pv: 4300,
-    amt: 2100,
+    month: 'Jul',
+    netWorth: 3490,
+    assets: 7790,
+    liabilities: 4300,
   },
 ];
 
+const chartConfig = {
+  netWorth: {
+    label: 'Net Worth',
+    color: 'hsl(var(--chart-1))',
+  },
+  assets: {
+    label: 'Assets',
+    color: 'hsl(var(--chart-2))',
+  },
+  liabilities: {
+    label: 'Liabilities',
+    color: 'hsl(var(--chart-3))',
+  },
+};
+
 export const Chart = () => {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ChartContainer config={chartConfig} className="h-full w-full">
       <LineChart
-        width={500}
-        height={300}
         data={data}
         margin={{
           top: 5,
@@ -68,14 +80,26 @@ export const Chart = () => {
           bottom: 5,
         }}
       >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
-        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis dataKey="month" className="text-muted-foreground" tick={{ fill: 'currentColor' }} />
+        <YAxis className="text-muted-foreground" tick={{ fill: 'currentColor' }} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="netWorth"
+          stroke="var(--color-netWorth)"
+          strokeWidth={2}
+          activeDot={{ r: 8 }}
+        />
+        <Line type="monotone" dataKey="assets" stroke="var(--color-assets)" strokeWidth={2} />
+        <Line
+          type="monotone"
+          dataKey="liabilities"
+          stroke="var(--color-liabilities)"
+          strokeWidth={2}
+        />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 };
