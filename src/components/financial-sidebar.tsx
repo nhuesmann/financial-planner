@@ -8,7 +8,6 @@ import {
   Target,
   TrendingUp,
   Wallet,
-  Zap,
 } from 'lucide-react';
 
 import {
