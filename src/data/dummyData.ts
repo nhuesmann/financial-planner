@@ -4,6 +4,7 @@ import {
   ComponentType,
   ExpenseFrequency,
   InvestmentAccountType,
+  MortgageTerm,
 } from '@/types/components';
 import { ChartData } from '@/types/timeline/chart';
 import { createChartData } from '@/utils/calculations/chartTransformers';
@@ -75,18 +76,19 @@ export function generateDummyComponents(): Component[] {
       color: '#3b82f6',
     },
 
-    // High-Yield Savings
+    // High-Yield Savings with monthly contribution
     {
       id: 'savings-1',
-      name: 'Emergency Fund',
+      name: 'Ally Savings',
       type: ComponentType.SAVINGS_ACCOUNT,
       startDate: oneYearAgo,
       balance: 25000,
       interestRate: 4.5,
+      monthlyContribution: 300, // $300/month automatic transfer
       color: '#10b981',
     },
 
-    // 401k Investment Account
+    // 401k Investment Account with employer match
     {
       id: 'investment-1',
       name: '401(k)',
@@ -95,6 +97,9 @@ export function generateDummyComponents(): Component[] {
       balance: 50000,
       projectedAnnualReturn: 8,
       accountType: InvestmentAccountType.FOUR_ZERO_ONE_K,
+      monthlyContribution: 500, // $500/month employee contribution
+      employerMatchPercent: 4, // 4% match
+      employerMatchLimit: 6000, // $6k annual match limit
       color: '#8b5cf6',
     },
 
@@ -134,17 +139,22 @@ export function generateDummyComponents(): Component[] {
       color: '#b91c1c',
     },
 
-    // Current Home
+    // Future Home Purchase (6 months from now)
     {
       id: 'home-1',
-      name: 'Primary Residence',
-      type: ComponentType.CURRENT_HOME,
+      name: 'Future Home Purchase',
+      type: ComponentType.FUTURE_HOME_PURCHASE,
       startDate: oneYearAgo,
-      currentHomeValue: 450000,
-      remainingMortgageBalance: 320000,
-      monthlyPayment: 2200,
-      interestRate: 3.5,
-      yearsRemainingOnMortgage: 25,
+      purchasePrice: 450000,
+      downPaymentPercent: 20, // 20% down payment
+      interestRate: 6.5,
+      mortgageTerm: MortgageTerm.THIRTY_YEARS,
+      purchaseDate: (() => {
+        const date = new Date(today);
+        date.setMonth(today.getMonth() + 6);
+        return date;
+      })(),
+      // monthlyPayment will be calculated automatically
       color: '#06b6d4',
     },
   ];

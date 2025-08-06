@@ -49,6 +49,7 @@ export interface SavingsAccount extends BaseComponent {
   type: ComponentType.SAVINGS_ACCOUNT;
   balance: number;
   interestRate: number;
+  monthlyContribution?: number; // Optional automatic transfer from checking
 }
 
 export interface InvestmentAccount extends BaseComponent {
@@ -56,6 +57,9 @@ export interface InvestmentAccount extends BaseComponent {
   balance: number;
   projectedAnnualReturn: number;
   accountType: InvestmentAccountType;
+  monthlyContribution?: number; // Employee contribution from checking
+  employerMatchPercent?: number; // Employer match percentage (e.g., 4 for 4%)
+  employerMatchLimit?: number; // Optional annual match limit in dollars
 }
 
 export interface Debt extends BaseComponent {
@@ -94,6 +98,7 @@ export interface FutureHomePurchase extends BaseComponent {
   interestRate: number;
   mortgageTerm: MortgageTerm;
   purchaseDate: Date;
+  monthlyPayment?: number; // Calculated or user-provided mortgage payment
 }
 
 export interface RetirementMilestone extends BaseComponent {

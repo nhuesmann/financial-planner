@@ -16,14 +16,37 @@ import {
 
 import { SAMPLE_CHART_DATA } from '@/data/dummyData';
 import { ChartData } from '@/types/timeline/chart';
+import {
+  aggregateComponents,
+  DEFAULT_AGGREGATION_CONFIG,
+} from '@/utils/calculations/componentAggregator';
 
 interface TimelineChartProps {
   data?: ChartData;
   height?: number;
+  useLogScale?: boolean;
+  showComponentGroups?: boolean;
 }
 
-export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: TimelineChartProps) {
+export function TimelineChart({
+  data = SAMPLE_CHART_DATA,
+  height = 500,
+  useLogScale = false,
+  showComponentGroups = false,
+}: TimelineChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+  const [isLogScale, setIsLogScale] = useState(useLogScale);
+  const [useGrouping, setUseGrouping] = useState(showComponentGroups);
+
+  // Apply component aggregation if enabled
+  const displayComponents = useMemo(() => {
+    if (useGrouping) {
+      // Need to pass the original components - for now, using the chart series
+      // In production, would pass components from props
+      return aggregateComponents([], data.components, DEFAULT_AGGREGATION_CONFIG);
+    }
+    return data.components;
+  }, [data.components, useGrouping]);
 
   // Transform data for Recharts
   const chartData = useMemo(() => {
@@ -31,7 +54,7 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
     const dateMap = new Map<number, any>();
 
     // Add component data
-    data.components.forEach((series) => {
+    displayComponents.forEach((series) => {
       if (!hiddenSeries.has(series.id)) {
         series.data.forEach((point) => {
           if (!dateMap.has(point.x)) {
@@ -54,12 +77,12 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
 
     // Convert to array and sort by date
     return Array.from(dateMap.values()).sort((a, b) => a.date - b.date);
-  }, [data, hiddenSeries]);
+  }, [displayComponents, data.netWorth, hiddenSeries]);
 
   // Custom dot for edit markers
   const CustomDot = (props: any) => {
     const { cx, cy, payload, dataKey } = props;
-    const series = data.components.find((s) => s.id === dataKey);
+    const series = displayComponents.find((s) => s.id === dataKey);
     const marker = series?.markers?.find(
       (m) => Math.abs(m.x - payload.date) < 86400000 // Within a day
     );
@@ -115,7 +138,7 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
             const displayName =
               entry.dataKey === 'netWorth'
                 ? 'Net Worth'
-                : data.components.find((c) => c.id === entry.dataKey)?.name || entry.dataKey;
+                : displayComponents.find((c) => c.id === entry.dataKey)?.name || entry.dataKey;
             return (
               <p key={index} style={{ color: entry.color }}>
                 {displayName}: {formatCurrency(entry.value)}
@@ -132,8 +155,22 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
     <div className="w-full">
       <div className="mb-4">
         <h3 className="mb-2 text-lg font-semibold">Financial Timeline</h3>
+        <div className="mb-3 flex gap-4">
+          <button
+            onClick={() => setIsLogScale(!isLogScale)}
+            className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium hover:bg-gray-50"
+          >
+            {isLogScale ? 'Linear Scale' : 'Log Scale'}
+          </button>
+          <button
+            onClick={() => setUseGrouping(!useGrouping)}
+            className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium hover:bg-gray-50"
+          >
+            {useGrouping ? 'Show All Components' : 'Group Small Items'}
+          </button>
+        </div>
         <div className="flex flex-wrap gap-2">
-          {data.components.map((series) => (
+          {displayComponents.map((series) => (
             <button
               key={series.id}
               onClick={() => toggleSeries(series.id)}
@@ -174,7 +211,11 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
             domain={['dataMin', 'dataMax']}
             tickFormatter={(tick) => format(new Date(tick), 'MMM yy')}
           />
-          <YAxis tickFormatter={formatCurrency} />
+          <YAxis
+            tickFormatter={formatCurrency}
+            scale={isLogScale ? 'log' : 'linear'}
+            domain={isLogScale ? ['auto', 'auto'] : undefined}
+          />
           <Tooltip content={<CustomTooltip />} />
 
           {/* Net Worth Area */}
@@ -193,7 +234,7 @@ export function TimelineChart({ data = SAMPLE_CHART_DATA, height = 500 }: Timeli
           <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
 
           {/* Component Lines */}
-          {data.components.map(
+          {displayComponents.map(
             (series) =>
               !hiddenSeries.has(series.id) && (
                 <Line

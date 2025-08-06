@@ -7,6 +7,7 @@ import {
   TimelineDataPoint,
 } from '@/types/timeline/chart';
 
+import { AccountFlowCalculator } from './accountFlowCalculator';
 import { calculateComponentTimeline } from './componentCalculators';
 
 /**
@@ -32,7 +33,7 @@ export function transformToChartSeries(timeline: ComponentTimeline): ChartDataSe
 }
 
 /**
- * Calculate net worth from all components
+ * Calculate net worth from all components using flow-based accounting
  */
 export function calculateNetWorth(
   components: Component[],
@@ -41,61 +42,43 @@ export function calculateNetWorth(
 ): NetWorthDataPoint[] {
   const netWorthPoints: NetWorthDataPoint[] = [];
 
-  // Calculate all component timelines first
-  const componentTimelines = new Map<string, TimelineDataPoint[]>();
-  for (const component of components) {
+  // Use the new AccountFlowCalculator for proper money flow tracking
+  const flowCalculator = new AccountFlowCalculator(components, componentEdits);
+  const { balances } = flowCalculator.calculateFlows(dateRange);
+
+  // Process home components separately (they don't go through cash flow)
+  const homeComponents = components.filter(
+    (c) => c.type === 'CURRENT_HOME' || c.type === 'FUTURE_HOME_PURCHASE'
+  );
+
+  const homeTimelines = new Map<string, TimelineDataPoint[]>();
+  for (const component of homeComponents) {
     const edits = componentEdits.get(component.id) || [];
     const timeline = calculateComponentTimeline(component, dateRange, edits);
-    componentTimelines.set(component.id, timeline);
+    homeTimelines.set(component.id, timeline);
   }
 
-  // Track cumulative cash flow
-  let cumulativeCashFlow = 0;
-
+  // Build net worth data points from account balances
   for (let i = 0; i < dateRange.length; i++) {
     const date = dateRange[i];
-    let cash = 0;
-    let investments = 0;
+    const balance = balances[i];
+
+    // Calculate real estate value for this date
     let realEstate = 0;
-    let debts = 0;
-    let monthlyIncome = 0;
-    let monthlyExpenses = 0;
-
-    for (const component of components) {
-      const timeline = componentTimelines.get(component.id);
-      const value = timeline?.[i]?.value || 0;
-
-      switch (component.type) {
-        case 'CHECKING_ACCOUNT':
-          cash += value;
-          break;
-        case 'SAVINGS_ACCOUNT':
-          cash += value;
-          break;
-        case 'INVESTMENT_ACCOUNT':
-          investments += value;
-          break;
-        case 'CURRENT_HOME':
-        case 'FUTURE_HOME_PURCHASE':
-          realEstate += value;
-          break;
-        case 'DEBT':
-          debts += Math.abs(value); // Store as positive for breakdown
-          break;
-        case 'INCOME':
-          monthlyIncome += value;
-          break;
-        case 'EXPENSE':
-          monthlyExpenses += Math.abs(value);
-          break;
-      }
+    for (const component of homeComponents) {
+      const timeline = homeTimelines.get(component.id);
+      realEstate += timeline?.[i]?.value || 0;
     }
 
-    // Add monthly cash flow to cumulative
-    cumulativeCashFlow += monthlyIncome - monthlyExpenses;
+    // Aggregate cash (checking + savings)
+    const cash =
+      balance.checking + Array.from(balance.savings.values()).reduce((sum, val) => sum + val, 0);
 
-    // Add cumulative cash flow to cash assets
-    cash += cumulativeCashFlow;
+    // Aggregate investments
+    const investments = Array.from(balance.investments.values()).reduce((sum, val) => sum + val, 0);
+
+    // Get total debts
+    const debts = balance.totalLiabilities;
 
     const assets = cash + investments + realEstate;
     const liabilities = debts;
@@ -148,21 +131,53 @@ export function createChartData(
   components: Component[],
   dateRange: Date[],
   componentEdits: Map<string, ComponentEdit[]> = new Map(),
-  componentColors: Map<string, string> = new Map()
+  componentColors: Map<string, string> = new Map(),
+  useFlowBasedCalculation: boolean = true
 ): ChartData {
-  // Calculate timelines for each component
-  const componentTimelines: ComponentTimeline[] = components.map((component) => ({
-    componentId: component.id,
-    componentType: component.type,
-    name: component.name,
-    color: componentColors.get(component.id) || component.color || getDefaultColor(component.type),
-    dataPoints: calculateComponentTimeline(
-      component,
-      dateRange,
-      componentEdits.get(component.id) || []
-    ),
-    visible: true,
-  }));
+  let componentTimelines: ComponentTimeline[];
+
+  if (useFlowBasedCalculation) {
+    // Use the new flow-based calculator for accurate account relationships
+    const flowCalculator = new AccountFlowCalculator(components, componentEdits);
+    const { componentTimelines: flowTimelines } = flowCalculator.calculateFlows(dateRange);
+
+    // Also calculate home components separately (they don't go through flow)
+    const homeComponents = components.filter(
+      (c) => c.type === 'CURRENT_HOME' || c.type === 'FUTURE_HOME_PURCHASE'
+    );
+
+    for (const component of homeComponents) {
+      const edits = componentEdits.get(component.id) || [];
+      const timeline = calculateComponentTimeline(component, dateRange, edits);
+      flowTimelines.set(component.id, timeline);
+    }
+
+    // Convert to ComponentTimeline format
+    componentTimelines = components.map((component) => ({
+      componentId: component.id,
+      componentType: component.type,
+      name: component.name,
+      color:
+        componentColors.get(component.id) || component.color || getDefaultColor(component.type),
+      dataPoints: flowTimelines.get(component.id) || [],
+      visible: true,
+    }));
+  } else {
+    // Fall back to original calculation method
+    componentTimelines = components.map((component) => ({
+      componentId: component.id,
+      componentType: component.type,
+      name: component.name,
+      color:
+        componentColors.get(component.id) || component.color || getDefaultColor(component.type),
+      dataPoints: calculateComponentTimeline(
+        component,
+        dateRange,
+        componentEdits.get(component.id) || []
+      ),
+      visible: true,
+    }));
+  }
 
   // Transform to chart series
   const chartSeries = componentTimelines.map(transformToChartSeries);
