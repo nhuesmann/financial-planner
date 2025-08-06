@@ -37,6 +37,7 @@ export interface BaseComponent {
   startDate: Date;
   endDate?: Date;
   notes?: string;
+  color?: string; // For chart visualization
 }
 
 export interface CheckingAccount extends BaseComponent {

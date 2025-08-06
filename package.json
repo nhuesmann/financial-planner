@@ -27,6 +27,7 @@
     "@react-navigation/native": "^7.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "expo": "^53.0.20",
     "expo-constants": "~17.1.4",
     "expo-dev-client": "~5.2.4",
